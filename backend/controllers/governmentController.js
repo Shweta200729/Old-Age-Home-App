@@ -63,3 +63,39 @@ exports.getDailyReportsByHome = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch daily reports' });
   }
 };
+
+exports.submitFeedback = async (req, res) => {
+  const { old_age_home_id, government_id, rating, comment } = req.body;
+  
+  if (!old_age_home_id || !rating || !comment) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const query = 'INSERT INTO feedbacks (old_age_home_id, government_id, rating, comment) VALUES ($1, $2, $3, $4) RETURNING *';
+    const result = await db.run(query, [old_age_home_id, government_id, rating, comment]);
+    res.status(201).json({ message: 'Feedback submitted successfully', feedback: result });
+  } catch (err) {
+    console.error('Error submitting feedback:', err.message);
+    res.status(500).json({ error: 'Failed to submit feedback' });
+  }
+};
+
+exports.getFeedbackByHome = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    const query = `
+      SELECT f.*, u.name AS government_name, u.avatar_url AS government_avatar
+      FROM feedbacks f
+      LEFT JOIN users u ON f.government_id = u.id
+      WHERE f.old_age_home_id = $1
+      ORDER BY f.created_at DESC
+    `;
+    const rows = await db.all(query, [id]);
+    res.json({ feedbacks: rows });
+  } catch (err) {
+    console.error('Error fetching feedbacks:', err.message);
+    res.status(500).json({ error: 'Failed to fetch feedbacks' });
+  }
+};

@@ -180,6 +180,33 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> submitFeedback(int homeId, int govtId, int rating, String comment) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/government/feedback'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'old_age_home_id': homeId,
+          'government_id': govtId,
+          'rating': rating,
+          'comment': comment
+        }),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> getFeedbackByHome(int homeId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/government/homes/$homeId/feedback'));
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   // --- HOMES --- //
 
   static Future<List<dynamic>> getAllHomes() async {

@@ -82,16 +82,22 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.eco, color: Colors.white, size: 24),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 const Text(
-                  'Serenity Care',
+                  'Saanj',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -139,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Sign in to manage your care sanctuary',
+                        'Sign in to manage your care sanctuary - Saanj',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -333,7 +339,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                             children: [
                               TextSpan(
-                                text: 'Join Serenity Care',
+                                text: 'Join Saanj',
                                 style: const TextStyle(
                                   color: Color(0xFF065F26),
                                   fontWeight: FontWeight.bold,
@@ -344,6 +350,17 @@ class _LoginScreenState extends State<LoginScreen> {
                                   },
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      const Center(
+                        child: Text(
+                          'Developed by St John College of Engineering and Management',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: Colors.black26,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),

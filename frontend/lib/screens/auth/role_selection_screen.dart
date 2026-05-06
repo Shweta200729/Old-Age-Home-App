@@ -17,16 +17,29 @@ class RoleSelectionScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.all(12),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF98F5AA),
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Colors.white,
                   shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.eco, color: Color(0xFF1E3A2B), size: 32),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/app_logo.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
               const SizedBox(height: 16),
               const Text(
-                'Serenity Care',
+                'Saanj',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
@@ -132,6 +145,17 @@ class RoleSelectionScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
+              const Center(
+                child: Text(
+                  'St John College of Engineering and Management',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.black26,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
             ],
           ),
         ),

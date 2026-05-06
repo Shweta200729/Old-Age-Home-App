@@ -116,6 +116,18 @@ const db = new sqlite3.Database(dbPath, (err) => {
         FOREIGN KEY (elderly_id) REFERENCES elderly(id)
       )`);
 
+      // Feedbacks table
+      db.run(`CREATE TABLE IF NOT EXISTS feedbacks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        old_age_home_id INTEGER,
+        government_id INTEGER,
+        rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+        comment TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (old_age_home_id) REFERENCES old_age_homes(id),
+        FOREIGN KEY (government_id) REFERENCES users(id)
+      )`);
+
       console.log('Database tables ensured.');
     });
   }

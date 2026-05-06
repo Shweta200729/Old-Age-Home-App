@@ -1,4 +1,4 @@
-# 🏡 Old Age Home Care App
+# 🏡 Saanj - Old Age Home Care App
 
 A full-stack mobile application built using **Flutter (Frontend)** and **Node.js + Express + SQLite (Backend)** to manage elderly residents in an old age home.
 

@@ -10,6 +10,7 @@ class AuthProvider extends ChangeNotifier {
   String get error => _error;
   Map<String, dynamic>? get user => _user;
   String get role => _user?['role'] ?? 'caretaker';
+  int? get userId => _user?['id'];
 
   void _setLoading(bool value) {
     _isLoading = value;

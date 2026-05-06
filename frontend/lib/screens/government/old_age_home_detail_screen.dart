@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../providers/government_provider.dart';
 import 'report_detail_screen.dart';
 import '../../core/widgets/facility_image.dart';
+import '../../providers/auth_provider.dart';
+import 'government_feedback_dialog.dart';
 class OldAgeHomeDetailScreen extends StatefulWidget {
   final int homeId;
   final String homeName;
@@ -33,10 +35,13 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
+    _tabController.addListener(() {
+      if (mounted) setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.homeId != 0) {
-        context.read<GovernmentProvider>().fetchHomeReports(widget.homeId);
+        context.read<GovernmentProvider>().fetchHomeData(widget.homeId);
       }
     });
   }
@@ -71,7 +76,7 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
                       const SizedBox(height: 20),
                       _buildTabSection(),
                       const SizedBox(height: 20),
-                      _buildReportsList(),
+                      _buildTabContent(),
                     ],
                   ),
                 )
@@ -297,10 +302,109 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
           labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
           tabs: const [
             Tab(text: 'Reports'),
+            Tab(text: 'Feedback'),
             Tab(text: 'Alerts'),
             Tab(text: 'Staff'),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTabContent() {
+    return [
+      _buildReportsList(),
+      _buildFeedbackList(),
+      _buildPlaceholder('Alerts coming soon'),
+      _buildPlaceholder('Staff management coming soon'),
+    ][_tabController.index];
+  }
+
+  Widget _buildPlaceholder(String text) {
+    return Center(child: Padding(padding: const EdgeInsets.all(48), child: Text(text, style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold))));
+  }
+
+  Widget _buildFeedbackList() {
+    final provider = context.watch<GovernmentProvider>();
+    final feedbacks = provider.feedbacks;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Government Feedback', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87)),
+              TextButton.icon(
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => GovernmentFeedbackDialog(homeId: widget.homeId, homeName: widget.homeName),
+                  );
+                },
+                icon: const Icon(Icons.add_comment_rounded, size: 18),
+                label: const Text('Add'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (feedbacks.isEmpty)
+            _buildPlaceholder('No feedback submitted yet.')
+          else
+            ...feedbacks.map((f) => _buildFeedbackCard(f)).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeedbackCard(dynamic f) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 14,
+                backgroundColor: Colors.blue.shade50,
+                child: const Icon(Icons.account_balance_rounded, size: 14, color: Colors.blue),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(f['government_name'] ?? 'Government Official', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                    Text(f['created_at']?.toString().split(' ')[0] ?? '', style: TextStyle(color: Colors.grey.shade400, fontSize: 10)),
+                  ],
+                ),
+              ),
+              Row(
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < (f['rating'] ?? 0) ? Icons.star_rounded : Icons.star_outline_rounded,
+                    color: Colors.amber,
+                    size: 14,
+                  );
+                }),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            f['comment'] ?? '',
+            style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+          ),
+        ],
       ),
     );
   }

@@ -149,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Get started with Serenity Care',
+                  'Get started with Saanj',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,

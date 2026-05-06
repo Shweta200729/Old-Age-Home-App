@@ -9,15 +9,70 @@ class GovernmentProvider extends ChangeNotifier {
   int _highRiskCount = 0;
 
   List<dynamic> _reports = []; // Home specific reports
+  List<dynamic> _feedbacks = []; // Home specific feedbacks
   List<dynamic> _systemAlerts = []; // System wide alerts
 
   bool get isLoading => _isLoading;
   String get error => _error;
   List<dynamic> get homes => _homes;
   List<dynamic> get reports => _reports;
+  List<dynamic> get feedbacks => _feedbacks;
   List<dynamic> get systemAlerts => _systemAlerts;
   int get totalResidents => _totalResidents;
   int get highRiskCount => _highRiskCount;
+
+  Future<void> fetchHomeData(int homeId) async {
+    _isLoading = true;
+    _error = '';
+    notifyListeners();
+
+    try {
+      final reportsRes = await ApiService.getDailyReportsByHome(homeId);
+      final feedbackRes = await ApiService.getFeedbackByHome(homeId);
+
+      if (reportsRes.containsKey('error')) {
+        _error = reportsRes['error'];
+      } else {
+        _reports = reportsRes['reports'] ?? [];
+      }
+
+      if (feedbackRes.containsKey('error')) {
+        // Log error but don't block reports
+        print('Feedback error: ${feedbackRes['error']}');
+      } else {
+        _feedbacks = feedbackRes['feedbacks'] ?? [];
+      }
+    } catch (e) {
+      _error = 'Failed to load home data';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<bool> submitHomeFeedback(int homeId, int govtId, int rating, String comment) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.submitFeedback(homeId, govtId, rating, comment);
+      _isLoading = false;
+      if (response.containsKey('error')) {
+        _error = response['error'];
+        notifyListeners();
+        return false;
+      } else {
+        // Refresh feedback list
+        await fetchHomeData(homeId);
+        return true;
+      }
+    } catch (e) {
+      _error = 'Failed to submit feedback';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 
   Future<void> fetchDashboardAnalytics() async {
     _isLoading = true;

@@ -66,3 +66,13 @@ CREATE TABLE daily_reports (
     issues TEXT,
     photo_path TEXT
 );
+
+-- Feedbacks table
+CREATE TABLE feedbacks (
+    id SERIAL PRIMARY KEY,
+    old_age_home_id INTEGER REFERENCES old_age_homes(id) ON DELETE CASCADE,
+    government_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    rating INTEGER CHECK(rating >= 1 AND rating <= 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
