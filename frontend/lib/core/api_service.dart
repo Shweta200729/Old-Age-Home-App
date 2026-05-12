@@ -6,21 +6,19 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiService {
   
-  static const String _localIp = '192.168.1.8'; 
+  static const String _localIp = '192.168.0.93'; 
 
   static String get baseUrl {
+    // TUNNEL: Your local backend via ngrok
+    const String tunnelUrl = 'https://professor-vividness-imminent.ngrok-free.dev/api';
+    
     // PRODUCTION: Your Render URL
     const String prodUrl = 'https://saanjh-xl2k.onrender.com/api';
     
-    // LOCAL: Set this to true to use your local backend
-    const bool useLocal = false;
+    // Set this to true to use the ngrok tunnel (Local Backend)
+    const bool useTunnel = true;
 
-    if (useLocal) {
-      if (kIsWeb) return 'http://localhost:5000/api';
-      if (Platform.isAndroid) return 'http://$_localIp:5000/api';
-      return 'http://localhost:5000/api';
-    }
-    
+    if (useTunnel) return tunnelUrl;
     return prodUrl;
   }
 
