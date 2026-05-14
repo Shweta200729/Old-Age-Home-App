@@ -75,6 +75,10 @@ exports.addDailyReport = async (req, res) => {
     return res.status(400).json({ error: 'elderly_id and date are required' });
   }
 
+  if (!photo_path || photo_path.trim() === '') {
+    return res.status(400).json({ error: 'Photo proof is mandatory for daily reports' });
+  }
+
   try {
     const query = `
       INSERT INTO daily_reports (
@@ -101,5 +105,29 @@ exports.addDailyReport = async (req, res) => {
   } catch (err) {
     console.error('Error adding daily report:', err.message);
     res.status(500).json({ error: 'Failed to add daily report' });
+  }
+};
+
+exports.addFacilityReport = async (req, res) => {
+  const { caretaker_id, old_age_home_id, date, bathroom_image, food_image, cleanliness_image } = req.body;
+
+  if (!caretaker_id || !old_age_home_id || !date || !bathroom_image || !food_image || !cleanliness_image) {
+    return res.status(400).json({ error: 'All fields including 3 images are required' });
+  }
+
+  try {
+    const query = `
+      INSERT INTO facility_reports (
+        caretaker_id, old_age_home_id, date, bathroom_image, food_image, cleanliness_image
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+
+    const params = [caretaker_id, old_age_home_id, date, bathroom_image, food_image, cleanliness_image];
+    const result = await db.run(query, params);
+
+    res.status(201).json({ message: 'Facility report added successfully', id: result.lastID });
+  } catch (err) {
+    console.error('Error adding facility report:', err.message);
+    res.status(500).json({ error: 'Failed to add facility report' });
   }
 };

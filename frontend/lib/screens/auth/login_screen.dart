@@ -70,8 +70,12 @@ class _LoginScreenState extends State<LoginScreen> {
             left: 0,
             right: 0,
             height: height * 0.45,
-            child: Image.network(
-              'https://images.unsplash.com/photo-1576765608535-5f04d1e3f289?auto=format&fit=crop&w=800&q=80',
+            child: Image.asset(
+              role == 'admin' 
+                  ? 'assets/images/admin_bg.png' 
+                  : role == 'government' 
+                      ? 'assets/images/govt_bg.png' 
+                      : 'assets/images/caretaker_bg.png',
               fit: BoxFit.cover,
             ),
           ),

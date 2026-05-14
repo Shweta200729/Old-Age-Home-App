@@ -104,4 +104,28 @@ class CaretakerProvider extends ChangeNotifier {
       notifyListeners();
     });
   }
+
+  Future<bool> submitFacilityReport(Map<String, dynamic> reportData) async {
+    _isLoading = true;
+    _error = '';
+    notifyListeners();
+
+    try {
+      final response = await ApiService.addFacilityReport(reportData);
+      _isLoading = false;
+      if (response.containsKey('error')) {
+        _error = response['error'];
+        notifyListeners();
+        return false;
+      } else {
+        notifyListeners();
+        return true;
+      }
+    } catch (e) {
+      _error = 'Failed to submit facility report';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

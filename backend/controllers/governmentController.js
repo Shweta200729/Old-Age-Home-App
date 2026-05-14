@@ -49,7 +49,7 @@ exports.getDailyReportsByHome = async (req, res) => {
   
   try {
     const query = `
-      SELECT dr.*, e.name AS elderly_name, e.room, u.name AS caretaker_name
+      SELECT dr.*, e.name AS elderly_name, e.room, u.name AS caretaker_name, e.old_age_home_id AS home_id
       FROM daily_reports dr
       JOIN elderly e ON dr.elderly_id = e.id
       LEFT JOIN users u ON e.caretaker_id = u.id
@@ -99,3 +99,61 @@ exports.getFeedbackByHome = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch feedbacks' });
   }
 };
+
+exports.getFacilityReportsByHome = async (req, res) => {
+  const { home_id } = req.params;
+  
+  try {
+    const query = `
+      SELECT fr.*, u.name AS caretaker_name
+      FROM facility_reports fr
+      LEFT JOIN users u ON fr.caretaker_id = u.id
+      WHERE fr.old_age_home_id = $1
+      ORDER BY fr.date DESC
+    `;
+    const rows = await db.all(query, [home_id]);
+    res.json({ facility_reports: rows });
+  } catch (err) {
+    console.error('Error fetching facility reports:', err.message);
+    res.status(500).json({ error: 'Failed to fetch facility reports' });
+  }
+};
+
+exports.acknowledgeReport = async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.body; // 'daily' or 'facility'
+  
+  try {
+    const table = type === 'facility' ? 'facility_reports' : 'daily_reports';
+    const query = `UPDATE ${table} SET is_acknowledged = true WHERE id = $1`;
+    const result = await db.run(query, [id]);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+    
+    res.json({ message: 'Report acknowledged successfully' });
+  } catch (err) {
+    console.error('Error acknowledging report:', err.message);
+    res.status(500).json({ error: 'Failed to acknowledge report' });
+  }
+};
+
+exports.scheduleInspection = async (req, res) => {
+  const { id } = req.params; // old_age_home_id
+  
+  try {
+    const query = `UPDATE old_age_homes SET status = 'under_inspection' WHERE id = $1`;
+    const result = await db.run(query, [id]);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Old age home not found' });
+    }
+    
+    res.json({ message: 'Inspection scheduled successfully' });
+  } catch (err) {
+    console.error('Error scheduling inspection:', err.message);
+    res.status(500).json({ error: 'Failed to schedule inspection' });
+  }
+};
+

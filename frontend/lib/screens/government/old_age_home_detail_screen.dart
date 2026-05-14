@@ -301,10 +301,10 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
           indicatorSize: TabBarIndicatorSize.tab,
           labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
           tabs: const [
-            Tab(text: 'Reports'),
+            Tab(text: 'Residents'),
+            Tab(text: 'Facility'),
             Tab(text: 'Feedback'),
             Tab(text: 'Alerts'),
-            Tab(text: 'Staff'),
           ],
         ),
       ),
@@ -314,9 +314,9 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
   Widget _buildTabContent() {
     return [
       _buildReportsList(),
+      _buildFacilityReportsList(),
       _buildFeedbackList(),
       _buildPlaceholder('Alerts coming soon'),
-      _buildPlaceholder('Staff management coming soon'),
     ][_tabController.index];
   }
 
@@ -437,6 +437,112 @@ class _OldAgeHomeDetailScreenState extends State<OldAgeHomeDetailScreen> with Si
           );
         }).toList(),
       ),
+    );
+  }
+
+  Widget _buildFacilityReportsList() {
+    final provider = context.watch<GovernmentProvider>();
+    final facilityReports = provider.facilityReports;
+
+    if (provider.isLoading) {
+      return const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator()));
+    }
+
+    if (facilityReports.isEmpty) {
+      return Center(child: Padding(padding: const EdgeInsets.all(48.0), child: Text('No facility reports found.', style: TextStyle(color: Colors.grey.shade400, fontWeight: FontWeight.bold))));
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        children: facilityReports.map((r) => _buildFacilityReportCard(r)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildFacilityReportCard(dynamic report) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Facility Daily Report', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Colors.black87)),
+              Text(report['date'] ?? '', style: TextStyle(color: Colors.grey.shade500, fontSize: 12, fontWeight: FontWeight.w600)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              CircleAvatar(radius: 10, backgroundColor: Colors.grey.shade200, child: const Icon(Icons.person, size: 12, color: Colors.black45)),
+              const SizedBox(width: 8),
+              Text('Submitted by: ${report['caretaker_name'] ?? 'Staff'}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.black54)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Divider(height: 1),
+          const SizedBox(height: 16),
+          _buildFacilityReportImageSection('Bathroom Condition', report['bathroom_image']),
+          const SizedBox(height: 12),
+          _buildFacilityReportImageSection('Food Quality', report['food_image']),
+          const SizedBox(height: 12),
+          _buildFacilityReportImageSection('Overall Cleanliness', report['cleanliness_image']),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFacilityReportImageSection(String title, String? imageUrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.black87)),
+        const SizedBox(height: 8),
+        Container(
+          height: 150,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade100,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.grey.shade200),
+          ),
+          child: imageUrl != null && imageUrl.isNotEmpty
+              ? ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const Center(child: CircularProgressIndicator());
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image_rounded, color: Colors.grey.shade400, size: 32),
+                          const SizedBox(height: 8),
+                          Text('Image unavailable', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                        ],
+                      );
+                    },
+                  ),
+                )
+              : Center(
+                  child: Text('No image provided', style: TextStyle(color: Colors.grey.shade500, fontSize: 12)),
+                ),
+        ),
+      ],
     );
   }
 

@@ -9,16 +9,22 @@ class ApiService {
   static const String _localIp = '192.168.0.93'; 
 
   static String get baseUrl {
-    // TUNNEL: Your local backend via ngrok
+    // 1. LOCAL: Directly to your machine (Best for performance)
+    // Use '10.0.2.2' for Android Emulator, 'localhost' for Web/iOS, 
+    // or your machine's IP (192.168.0.93) for physical devices.
+    const String localUrl = 'http://$_localIp:5000/api'; 
+    
+    // 2. TUNNEL: Your local backend via ngrok (Best for physical devices NOT on same WiFi)
     const String tunnelUrl = 'https://professor-vividness-imminent.ngrok-free.dev/api';
     
-    // PRODUCTION: Your Render URL
+    // 3. PRODUCTION: Your Render URL
     const String prodUrl = 'https://saanjh-xl2k.onrender.com/api';
     
-    // Set this to true to use the ngrok tunnel (Local Backend)
-    const bool useTunnel = true;
+    // SWITCH: Set this to 'local', 'tunnel', or 'prod'
+    const String mode = 'local'; 
 
-    if (useTunnel) return tunnelUrl;
+    if (mode == 'local') return localUrl;
+    if (mode == 'tunnel') return tunnelUrl;
     return prodUrl;
   }
 
@@ -32,17 +38,28 @@ class ApiService {
         return {'error': decoded['error'] ?? 'Server Error: ${response.statusCode}'};
       }
     } catch (e) {
-      return {'error': 'Failed to parse server response'};
+      print('--- PARSE ERROR ---');
+      print('Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
+      print('-------------------');
+      
+      String errorSnippet = response.body.length > 60 
+          ? '${response.body.substring(0, 60)}...' 
+          : response.body;
+          
+      return {
+        'error': 'Failed to parse server response. Check if backend is running correctly.\n\nResponse: $errorSnippet'
+      };
     }
   }
 
   // HELPER: Handle Exceptions safely
   static Map<String, dynamic> _handleError(dynamic e) {
-    print('API Error: $e'); // Print error to console for debugging
+    print('API Connection Error: $e'); 
     if (e is TimeoutException) {
-      return {'error': 'Connection timed out. Server might be down or unreachable on this network.'};
+      return {'error': 'Connection timed out. Ensure the backend (or ngrok) is active.'};
     }
-    return {'error': 'Network connection failed. Check server.'};
+    return {'error': 'Network connection failed. Verify your URL and internet connection.'};
   }
 
   // --- AUTH --- //
@@ -136,6 +153,19 @@ class ApiService {
     }
   }
 
+  static Future<Map<String, dynamic>> addFacilityReport(Map<String, dynamic> data) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/caretaker/facility-report'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(data),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
   // --- GOVERNMENT --- //
 
   static Future<Map<String, dynamic>> getDailyReportsByHome(int homeId) async {
@@ -199,6 +229,39 @@ class ApiService {
   static Future<Map<String, dynamic>> getFeedbackByHome(int homeId) async {
     try {
       final response = await http.get(Uri.parse('$baseUrl/government/homes/$homeId/feedback'));
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> getFacilityReportsByHome(int homeId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/government/facility-reports/$homeId'));
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> acknowledgeReport(int reportId, String type) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/government/reports/$reportId/acknowledge'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'type': type}),
+      );
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  static Future<Map<String, dynamic>> scheduleInspection(int homeId) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/government/homes/$homeId/inspection'),
+      );
       return _handleResponse(response);
     } catch (e) {
       return _handleError(e);

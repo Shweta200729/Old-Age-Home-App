@@ -4,6 +4,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/caretaker_provider.dart';
 import '../../providers/language_provider.dart';
 import 'daily_report_screen.dart';
+import 'facility_report_screen.dart';
 import 'alerts_screen.dart';
 import 'profile_screen.dart';
 
@@ -17,6 +18,7 @@ class CaretakerDashboard extends StatefulWidget {
 class _CaretakerDashboardState extends State<CaretakerDashboard> {
   int _selectedIndex = 0;
   dynamic _selectedResident;
+  bool _showFacilityReport = false;
 
   @override
   void initState() {
@@ -38,6 +40,7 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
     final user = context.watch<AuthProvider>().user;
     final String name = user?['name']?.split(' ')[0] ?? 'Caretaker';
     final String? userAvatarUrl = user?['avatar_url'];
+    final String homeName = user?['old_age_home_name'] ?? 'Facility';
     final provider = context.watch<CaretakerProvider>();
     final lang = context.watch<LanguageProvider>();
 
@@ -50,7 +53,7 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
     Widget body;
     switch (_selectedIndex) {
       case 0: // OVERVIEW
-        body = _buildDashboardHome(name, userAvatarUrl, wellnessPercentage, attentionCount, provider, lang);
+        body = _buildDashboardHome(name, userAvatarUrl, homeName, wellnessPercentage, attentionCount, provider, lang);
         break;
       case 1: // RESIDENTS
         body = _buildResidentsOnlyView(provider, lang);
@@ -62,7 +65,7 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
         body = ProfileScreen(onBack: () => setState(() => _selectedIndex = 0));
         break;
       default:
-        body = _buildDashboardHome(name, userAvatarUrl, wellnessPercentage, attentionCount, provider, lang);
+        body = _buildDashboardHome(name, userAvatarUrl, homeName, wellnessPercentage, attentionCount, provider, lang);
     }
 
     // Special case: If we are in "Report Mode" (triggered from card)
@@ -80,6 +83,22 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
           setState(() {
             _selectedResident = null;
             // Stay in Residents tab
+          });
+        },
+      );
+    }
+
+    if (_showFacilityReport && _selectedIndex == 0) {
+      body = FacilityReportScreen(
+        onBack: () {
+          setState(() {
+            _showFacilityReport = false;
+          });
+        },
+        onSubmit: () {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Facility Report submitted securely!')));
+          setState(() {
+            _showFacilityReport = false;
           });
         },
       );
@@ -111,11 +130,11 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
     );
   }
 
-  Widget _buildDashboardHome(String name, String? userAvatarUrl, int wellness, int attentionCount, CaretakerProvider provider, LanguageProvider lang) {
+  Widget _buildDashboardHome(String name, String? userAvatarUrl, String homeName, int wellness, int attentionCount, CaretakerProvider provider, LanguageProvider lang) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       children: [
-        _buildTopHeader(name, userAvatarUrl),
+        _buildTopHeader(name, userAvatarUrl, homeName),
         _buildWellnessCard(wellness, attentionCount),
         _buildHealthDistributionChart(provider.elderly),
         _buildQuickActions(lang),
@@ -226,7 +245,7 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
     );
   }
 
-  Widget _buildTopHeader(String name, String? userAvatarUrl) {
+  Widget _buildTopHeader(String name, String? userAvatarUrl, String homeName) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
@@ -244,7 +263,7 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Good Morning,', 
+                Text(homeName, 
                     style: TextStyle(color: Colors.grey.shade500, fontSize: 13, fontWeight: FontWeight.w500), 
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1),
@@ -318,6 +337,12 @@ class _CaretakerDashboardState extends State<CaretakerDashboard> {
           _buildActionButton('Submit Daily Report', Icons.description_rounded, const Color(0xFF048A39), Colors.white, () {
             ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(lang.t('Select a resident below to add a report', 'रिपोर्ट जोड़ने के लिए नीचे एक निवासी चुनें'))));
           }),
+          const SizedBox(height: 12),
+          _buildActionButton('Submit Facility Report', Icons.domain_verification_rounded, Colors.white, const Color(0xFF048A39), () {
+            setState(() {
+              _showFacilityReport = true;
+            });
+          }, isOutlined: true),
           const SizedBox(height: 12),
           _buildActionButton('Raise Facility Alert', Icons.warning_rounded, Colors.white, Colors.red, _triggerEmergency, isOutlined: true),
         ],

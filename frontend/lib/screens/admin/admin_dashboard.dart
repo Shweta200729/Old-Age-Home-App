@@ -371,6 +371,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildTopAppBar() {
+    final user = context.watch<AuthProvider>().user;
+    final String homeName = user?['old_age_home_name'] ?? 'Facility Admin Panel';
+
     return Container(
       color: Colors.white,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
@@ -382,16 +385,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
             child: Icon(Icons.admin_panel_settings, color: Colors.white, size: 20),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Facility Admin Panel',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 0.5),
+                  'Admin Panel • $homeName',
+                  style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Colors.grey, letterSpacing: 0.5),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
+                const Text(
                   'Daily Overview',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFF1E2125)),
                   overflow: TextOverflow.ellipsis,

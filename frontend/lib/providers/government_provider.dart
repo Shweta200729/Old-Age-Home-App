@@ -11,6 +11,7 @@ class GovernmentProvider extends ChangeNotifier {
   List<dynamic> _reports = []; // Home specific reports
   List<dynamic> _feedbacks = []; // Home specific feedbacks
   List<dynamic> _systemAlerts = []; // System wide alerts
+  List<dynamic> _facilityReports = []; // Facility wide reports
 
   bool get isLoading => _isLoading;
   String get error => _error;
@@ -18,6 +19,7 @@ class GovernmentProvider extends ChangeNotifier {
   List<dynamic> get reports => _reports;
   List<dynamic> get feedbacks => _feedbacks;
   List<dynamic> get systemAlerts => _systemAlerts;
+  List<dynamic> get facilityReports => _facilityReports;
   int get totalResidents => _totalResidents;
   int get highRiskCount => _highRiskCount;
 
@@ -29,6 +31,7 @@ class GovernmentProvider extends ChangeNotifier {
     try {
       final reportsRes = await ApiService.getDailyReportsByHome(homeId);
       final feedbackRes = await ApiService.getFeedbackByHome(homeId);
+      final facilityReportsRes = await ApiService.getFacilityReportsByHome(homeId);
 
       if (reportsRes.containsKey('error')) {
         _error = reportsRes['error'];
@@ -41,6 +44,12 @@ class GovernmentProvider extends ChangeNotifier {
         print('Feedback error: ${feedbackRes['error']}');
       } else {
         _feedbacks = feedbackRes['feedbacks'] ?? [];
+      }
+
+      if (facilityReportsRes.containsKey('error')) {
+        print('Facility reports error: ${facilityReportsRes['error']}');
+      } else {
+        _facilityReports = facilityReportsRes['facility_reports'] ?? [];
       }
     } catch (e) {
       _error = 'Failed to load home data';
@@ -145,5 +154,47 @@ class GovernmentProvider extends ChangeNotifier {
 
     _isLoading = false;
     notifyListeners();
+  }
+
+  Future<bool> acknowledgeReport(int reportId, String type) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.acknowledgeReport(reportId, type);
+      _isLoading = false;
+      if (response.containsKey('error')) {
+        _error = response['error'];
+        notifyListeners();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      _error = 'Failed to acknowledge report';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> scheduleInspection(int homeId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await ApiService.scheduleInspection(homeId);
+      _isLoading = false;
+      if (response.containsKey('error')) {
+        _error = response['error'];
+        notifyListeners();
+        return false;
+      }
+      return true;
+    } catch (e) {
+      _error = 'Failed to schedule inspection';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

@@ -26,6 +26,9 @@ flutter:
   assets:
     - assets/images/default_avatar.png
     - assets/images/app_logo.png
+    - assets/images/admin_bg.png
+    - assets/images/caretaker_bg.png
+    - assets/images/govt_bg.png
 
 flutter_launcher_icons:
   android: "ic_launcher"

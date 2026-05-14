@@ -68,4 +68,29 @@ class SupabaseStorageService {
       return null;
     }
   }
+  static Future<String?> uploadReportImage(File imageFile, String reportType, String timestampStr) async {
+    try {
+      final supabase = Supabase.instance.client;
+      final fileName = '${reportType}_$timestampStr.png';
+      final bytes = await imageFile.readAsBytes();
+
+      await supabase.storage
+          .from('reports')
+          .uploadBinary(
+             fileName, 
+             bytes,
+             fileOptions: const FileOptions(contentType: 'image/png', upsert: true),
+          );
+          
+      final publicUrl = supabase.storage
+          .from('reports')
+          .getPublicUrl(fileName);
+          
+      return publicUrl;
+    } catch (e) {
+      print('Error uploading report image: $e');
+      return null;
+    }
+  }
 }
+

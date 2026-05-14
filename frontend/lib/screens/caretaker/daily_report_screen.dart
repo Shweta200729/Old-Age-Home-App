@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../providers/caretaker_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../core/supabase_storage_service.dart';
 
 class DailyReportScreen extends StatefulWidget {
   final VoidCallback onBack;
@@ -28,14 +31,27 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
   bool medicineGiven = false;
   String medicineTime = '--:--';
 
-  String physicalActivity = 'Walking';
+  String physicalActivity = 'Assisted Walking';
 
   bool bathingCompleted = false;
   bool clothesChanged = false;
 
-  String mood = 'Happy';
+  String mood = 'Calm/Responsive';
 
   final TextEditingController _issuesController = TextEditingController();
+  
+  File? _photoProof;
+  bool _isUploading = false;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null) {
+      setState(() {
+        _photoProof = File(pickedFile.path);
+      });
+    }
+  }
 
   // --- Builders ---
 
@@ -207,7 +223,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
               padding: const EdgeInsets.all(16),
               children: [
                 _buildCard(
-                  title: 'Meal Status',
+                  title: 'Dietary Intake',
                   emoji: '🍽️',
                   child: Column(
                     children: [
@@ -218,7 +234,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                   ),
                 ),
                 _buildCard(
-                  title: 'Medicine',
+                  title: 'Medication Administration',
                   emoji: '💊',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,41 +242,54 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                       _buildSwitchRow('Medicine Given', medicineGiven, (v) => setState(() => medicineGiven = v)),
                       const Text('Time', style: TextStyle(fontSize: 12, color: Colors.grey)),
                       const SizedBox(height: 8),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade200),
-                          borderRadius: BorderRadius.circular(8),
+                      GestureDetector(
+                        onTap: () async {
+                          final TimeOfDay? picked = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              medicineTime = picked.format(context);
+                            });
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade200),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(medicineTime, style: const TextStyle(fontSize: 14, color: Colors.black87)),
                         ),
-                        child: Text(medicineTime, style: const TextStyle(fontSize: 14, color: Colors.black87)),
                       ),
                     ],
                   ),
                 ),
                 _buildCard(
-                  title: 'Physical Activity',
+                  title: 'Mobility & Activity',
                   emoji: '🚶',
                   child: Column(
                     children: [
-                      _buildRadioPill('Walking'),
-                      _buildRadioPill('Light Exercise'),
-                      _buildRadioPill('Bed Rest'),
+                      _buildRadioPill('Assisted Walking'),
+                      _buildRadioPill('Physiotherapy'),
+                      _buildRadioPill('Resting/Bedbound'),
                     ],
                   ),
                 ),
                 _buildCard(
-                  title: 'Hygiene Care',
+                  title: 'Personal Care & Hygiene',
                   emoji: '🛁',
                   child: Column(
                     children: [
-                      _buildSwitchRow('Bathing Completed', bathingCompleted, (v) => setState(() => bathingCompleted = v)),
-                      _buildSwitchRow('Clothes Changed', clothesChanged, (v) => setState(() => clothesChanged = v)),
+                      _buildSwitchRow('Sponge/Full Bath', bathingCompleted, (v) => setState(() => bathingCompleted = v)),
+                      _buildSwitchRow('Grooming & Changing', clothesChanged, (v) => setState(() => clothesChanged = v)),
                     ],
                   ),
                 ),
                 _buildCard(
-                  title: 'Mood Status',
+                  title: 'Cognitive & Emotional State',
                   emoji: '😊',
                   child: GridView.count(
                     padding: EdgeInsets.zero,
@@ -271,10 +300,10 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                     crossAxisSpacing: 12,
                     childAspectRatio: 1.8,
                     children: [
-                      _buildMoodCard('Happy', Icons.sentiment_very_satisfied),
-                      _buildMoodCard('Normal', Icons.sentiment_neutral),
-                      _buildMoodCard('Sad', Icons.sentiment_dissatisfied),
-                      _buildMoodCard('Aggressive', Icons.warning_amber_rounded),
+                      _buildMoodCard('Calm/Responsive', Icons.sentiment_very_satisfied),
+                      _buildMoodCard('Disoriented', Icons.sentiment_neutral),
+                      _buildMoodCard('Anxious', Icons.sentiment_dissatisfied),
+                      _buildMoodCard('Unresponsive', Icons.warning_amber_rounded),
                     ],
                   ),
                 ),
@@ -299,29 +328,61 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                   ),
                 ),
                 _buildCard(
-                  title: 'Photo Proof (Optional)',
+                  title: 'Photo Proof (Mandatory)',
                   emoji: '📷',
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(Icons.camera_alt_outlined, color: Colors.grey.shade500, size: 32),
-                        const SizedBox(height: 8),
-                        Text('Tap to upload photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-                      ],
+                  child: GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      width: double.infinity,
+                      padding: _photoProof == null ? const EdgeInsets.symmetric(vertical: 24) : EdgeInsets.zero,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: _photoProof == null
+                          ? Column(
+                              children: [
+                                Icon(Icons.camera_alt_outlined, color: Colors.grey.shade500, size: 32),
+                                const SizedBox(height: 8),
+                                Text('Tap to capture photo', style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
+                              ],
+                            )
+                          : ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.file(_photoProof!, height: 150, width: double.infinity, fit: BoxFit.cover),
+                            ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 ElevatedButton(
-                  onPressed: () async {
-                    final caretaker = context.read<CaretakerProvider>();
+                  onPressed: _isUploading || context.watch<CaretakerProvider>().isLoading ? null : () async {
+                    if (_photoProof == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Photo proof is mandatory.')),
+                      );
+                      return;
+                    }
+
+                    setState(() => _isUploading = true);
+                    
                     final auth = context.read<AuthProvider>();
+                    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+                    
+                    final photoUrl = await SupabaseStorageService.uploadReportImage(
+                      _photoProof!, 'daily_${widget.resident['id']}', timestamp
+                    );
+
+                    if (photoUrl == null) {
+                      setState(() => _isUploading = false);
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Failed to upload photo. Please try again.')),
+                      );
+                      return;
+                    }
+
+                    final caretaker = context.read<CaretakerProvider>();
                     
                     final success = await caretaker.submitDailyReport({
                       'elderly_id': widget.resident['id'],
@@ -337,12 +398,16 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                       'clothes_changed': clothesChanged,
                       'mood': mood,
                       'issues': _issuesController.text,
-                      'photo_path': '', 
+                      'photo_path': photoUrl, 
                     });
 
+                    setState(() => _isUploading = false);
+
                     if (success) {
+                      if (!mounted) return;
                       widget.onSubmit();
                     } else {
+                      if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Error: ${caretaker.error}'))
                       );
@@ -355,7 +420,7 @@ class _DailyReportScreenState extends State<DailyReportScreen> {
                     elevation: 4,
                     shadowColor: const Color(0xFF048A39).withOpacity(0.3),
                   ),
-                  child: context.watch<CaretakerProvider>().isLoading 
+                  child: _isUploading || context.watch<CaretakerProvider>().isLoading 
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                     : const Text('Submit Final Report', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white)),
                 ),
