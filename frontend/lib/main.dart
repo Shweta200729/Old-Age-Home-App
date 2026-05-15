@@ -6,6 +6,7 @@ import 'providers/caretaker_provider.dart';
 import 'providers/government_provider.dart';
 import 'providers/admin_provider.dart';
 import 'providers/language_provider.dart';
+import 'providers/relative_provider.dart';
 
 import 'screens/auth/role_selection_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -13,6 +14,7 @@ import 'screens/auth/register_screen.dart';
 import 'screens/caretaker/caretaker_dashboard.dart';
 import 'screens/government/government_dashboard.dart';
 import 'screens/admin/admin_dashboard.dart';
+import 'screens/relative/relative_dashboard.dart';
 import 'core/supabase_storage_service.dart';
 
 void main() async {
@@ -34,6 +36,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => GovernmentProvider()),
         ChangeNotifierProvider(create: (_) => AdminProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
+        ChangeNotifierProvider(create: (_) => RelativeProvider()),
       ],
       child: const MyApp(),
     ),
@@ -61,6 +64,7 @@ class MyApp extends StatelessWidget {
         '/dashboard/caretaker': (context) => const CaretakerDashboard(),
         '/dashboard/government': (context) => const GovernmentDashboard(),
         '/dashboard/admin': (context) => const AdminDashboard(),
+        '/dashboard/relative': (context) => const RelativeDashboard(),
       },
     );
   }

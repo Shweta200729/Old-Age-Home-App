@@ -37,6 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
          Navigator.pushReplacementNamed(context, '/dashboard/government');
       } else if (actualRole == 'admin') {
          Navigator.pushReplacementNamed(context, '/dashboard/admin');
+      } else if (actualRole == 'relative') {
+         Navigator.pushReplacementNamed(context, '/dashboard/relative');
       } else {
          Navigator.pushReplacementNamed(context, '/dashboard/caretaker');
       }
@@ -75,7 +77,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   ? 'assets/images/admin_bg.png' 
                   : role == 'government' 
                       ? 'assets/images/govt_bg.png' 
-                      : 'assets/images/caretaker_bg.png',
+                      : role == 'relative'
+                          ? 'assets/images/relative_bg.png' 
+                          : 'assets/images/caretaker_bg.png',
               fit: BoxFit.cover,
             ),
           ),
@@ -332,31 +336,33 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 48),
-                      Center(
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Don't have an account? ",
-                            style: const TextStyle(
-                              color: Colors.black54,
-                              fontSize: 14,
-                            ),
-                            children: [
-                              TextSpan(
-                                text: 'Join Saanj',
-                                style: const TextStyle(
-                                  color: Color(0xFF065F26),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                recognizer: TapGestureRecognizer()
-                                  ..onTap = () {
-                                    Navigator.pushNamed(context, '/register', arguments: {'role': role});
-                                  },
+                      if (role != 'relative') ...[
+                        const SizedBox(height: 48),
+                        Center(
+                          child: RichText(
+                            text: TextSpan(
+                              text: "Don't have an account? ",
+                              style: const TextStyle(
+                                color: Colors.black54,
+                                fontSize: 14,
                               ),
-                            ],
+                              children: [
+                                TextSpan(
+                                  text: 'Join Saanj',
+                                  style: const TextStyle(
+                                    color: Color(0xFF065F26),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      Navigator.pushNamed(context, '/register', arguments: {'role': role});
+                                    },
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                       const SizedBox(height: 16),
                       const Center(
                         child: Text(

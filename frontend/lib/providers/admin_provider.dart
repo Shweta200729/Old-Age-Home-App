@@ -62,7 +62,7 @@ class AdminProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> addResident(Map<String, dynamic> data) async {
+  Future<Map<String, dynamic>> addResident(Map<String, dynamic> data) async {
     _isLoading = true;
     _error = '';
     notifyListeners();
@@ -73,19 +73,23 @@ class AdminProvider extends ChangeNotifier {
       if (response.containsKey('error')) {
         _error = response['error'];
         notifyListeners();
-        return false;
+        return {'success': false};
       } else {
         // Refresh list
         if (data.containsKey('old_age_home_id')) {
           await fetchResidents(data['old_age_home_id']);
         }
-        return true;
+        return {
+          'success': true,
+          'relative_email': response['relative_email'],
+          'relative_password': response['relative_password'],
+        };
       }
     } catch (e) {
       _error = 'Failed to add resident';
       _isLoading = false;
       notifyListeners();
-      return false;
+      return {'success': false};
     }
   }
 

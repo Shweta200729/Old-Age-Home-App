@@ -60,7 +60,7 @@ exports.viewAllData = async (req, res) => {
 };
 
 exports.addResident = async (req, res) => {
-  const { name, age, gender, room, medical_conditions, emergency_contact, admission_date, old_age_home_id } = req.body;
+  const { name, age, gender, room, medical_conditions, emergency_contact, admission_date, old_age_home_id, relative_name, relative_email } = req.body;
   
   if (!name || !age || !old_age_home_id) {
     return res.status(400).json({ error: 'Name, age, and old_age_home_id are required' });
@@ -70,9 +70,37 @@ exports.addResident = async (req, res) => {
     const query = `
       INSERT INTO elderly (name, age, gender, room, medical_conditions, emergency_contact, admission_date, old_age_home_id)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
     `;
-    const result = await db.run(query, [name, age, gender, room, medical_conditions, emergency_contact, admission_date, old_age_home_id]);
-    res.status(201).json({ message: 'Resident added successfully', id: result.lastID });
+    const result = await db.pool.query(query, [name, age, gender, room, medical_conditions, emergency_contact, admission_date, old_age_home_id]);
+    const elderly_id = result.rows[0].id;
+    
+    let relative_password = null;
+    
+    if (relative_name && relative_email) {
+      relative_password = Math.random().toString(36).slice(-8);
+      const userQuery = `
+        INSERT INTO users (name, email, password, role, status, elderly_id)
+        VALUES ($1, $2, $3, 'relative', 'approved', $4)
+      `;
+      try {
+        await db.pool.query(userQuery, [relative_name, relative_email, relative_password, elderly_id]);
+      } catch (err) {
+        if (err.code === '23505') {
+          console.error("Relative email already exists:", relative_email);
+          relative_password = null;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    res.status(201).json({ 
+      message: 'Resident added successfully', 
+      id: elderly_id,
+      relative_password: relative_password,
+      relative_email: relative_password ? relative_email : null
+    });
   } catch (err) {
     console.error('Error adding resident:', err.message);
     res.status(500).json({ error: 'Failed to add resident' });

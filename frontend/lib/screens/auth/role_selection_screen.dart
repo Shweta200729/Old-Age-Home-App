@@ -99,6 +99,20 @@ class RoleSelectionScreen extends StatelessWidget {
                 iconColor: const Color(0xFF991B1B),
                 role: 'government',
               ),
+              _buildRoleCard(
+                context,
+                title: 'Relative / Guardian',
+                subtitle:
+                    'Stay connected with your loved ones. View daily health reports, activities, and meals in real-time.',
+                imageUrl:
+                    'https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=800&q=80',
+                buttonText: 'View Resident Updates',
+                buttonColor: const Color(0xFFF3F4F6),
+                buttonTextColor: const Color(0xFFD97706),
+                iconData: Icons.family_restroom,
+                iconColor: const Color(0xFFD97706),
+                role: 'relative',
+              ),
               const SizedBox(height: 40),
               RichText(
                 text: TextSpan(

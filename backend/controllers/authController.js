@@ -43,7 +43,7 @@ exports.login = async (req, res) => {
 
   try {
     const query = `
-      SELECT u.id, u.name, u.email, u.role, u.old_age_home_id, u.avatar_url, h.name AS old_age_home_name
+      SELECT u.id, u.name, u.email, u.role, u.old_age_home_id, u.avatar_url, u.elderly_id, h.name AS old_age_home_name
       FROM users u
       LEFT JOIN old_age_homes h ON u.old_age_home_id = h.id
       WHERE u.email = $1 AND u.password = $2
@@ -63,7 +63,8 @@ exports.login = async (req, res) => {
         role: user.role,
         old_age_home_id: user.old_age_home_id,
         old_age_home_name: user.old_age_home_name,
-        avatar_url: user.avatar_url
+        avatar_url: user.avatar_url,
+        elderly_id: user.elderly_id
       }
     });
   } catch (err) {

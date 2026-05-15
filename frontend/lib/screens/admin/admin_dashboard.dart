@@ -65,6 +65,9 @@ class _AdminDashboardState extends State<AdminDashboard> {
     final TextEditingController emergencyCtl = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
+    final TextEditingController relativeNameCtl = TextEditingController();
+    final TextEditingController relativeEmailCtl = TextEditingController();
+
     String errorMsg = '';
 
     showDialog(
@@ -213,6 +216,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
                       ),
                     ),
 
+                    const SizedBox(height: 32),
+                    const Text('RELATIVE / GUARDIAN (OPTIONAL)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF1E2125), letterSpacing: 1.0)),
+                    const SizedBox(height: 16),
+                    
+                    _buildModalLabel('RELATIVE NAME'),
+                    _buildModalInput(relativeNameCtl, 'e.g., Jane Doe', icon: Icons.family_restroom_rounded),
+                    const SizedBox(height: 20),
+
+                    _buildModalLabel('RELATIVE EMAIL'),
+                    _buildModalInput(relativeEmailCtl, 'e.g., jane@example.com', icon: Icons.email_outlined, keyboardType: TextInputType.emailAddress),
+
                     if (errorMsg.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Text(errorMsg, style: const TextStyle(color: Color(0xFFDC2626), fontSize: 13, fontWeight: FontWeight.w700)),
@@ -234,7 +248,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           return;
                         }
 
-                        final success = await admin.addResident({
+                        final result = await admin.addResident({
                           'name': nameCtl.text,
                           'age': int.tryParse(ageCtl.text) ?? 60,
                           'gender': gender,
@@ -243,11 +257,41 @@ class _AdminDashboardState extends State<AdminDashboard> {
                           'emergency_contact': emergencyCtl.text,
                           'admission_date': formattedDate,
                           'old_age_home_id': auth.user!['old_age_home_id'],
+                          if (relativeNameCtl.text.isNotEmpty && relativeEmailCtl.text.isNotEmpty) 'relative_name': relativeNameCtl.text,
+                          if (relativeNameCtl.text.isNotEmpty && relativeEmailCtl.text.isNotEmpty) 'relative_email': relativeEmailCtl.text,
                         });
 
-                        if (success) {
+                        if (result['success'] == true) {
                           Navigator.pop(ctx);
                           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Resident Boarded Successfully!')));
+                          
+                          if (result['relative_password'] != null) {
+                            showDialog(
+                              context: context,
+                              builder: (ctx2) => AlertDialog(
+                                title: const Text('Relative Account Created', style: TextStyle(fontWeight: FontWeight.bold)),
+                                content: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('Please share these credentials with the relative/guardian:', style: TextStyle(fontSize: 14)),
+                                    const SizedBox(height: 16),
+                                    Text('Email: ${result['relative_email']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 8),
+                                    Text('Password: ${result['relative_password']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                actions: [
+                                  ElevatedButton(
+                                    onPressed: () => Navigator.pop(ctx2),
+                                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF16A34A), foregroundColor: Colors.white),
+                                    child: const Text('Done'),
+                                  )
+                                ],
+                              )
+                            );
+                          }
                         } else {
                           setModalState(() => errorMsg = admin.error);
                         }

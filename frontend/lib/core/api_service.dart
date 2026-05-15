@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 class ApiService {
   
-  static const String _localIp = '192.168.0.93'; 
+  static const String _localIp = '192.168.0.93';
 
   static String get baseUrl {
     // 1. LOCAL: Directly to your machine (Best for performance)
@@ -343,6 +343,17 @@ class ApiService {
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'homeId': homeId, 'image_url': imageUrl}),
       );
+      return _handleResponse(response);
+    } catch (e) {
+      return _handleError(e);
+    }
+  }
+
+  // --- RELATIVE --- //
+
+  static Future<Map<String, dynamic>> getRelativeReports(int elderlyId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/relative/reports/$elderlyId'));
       return _handleResponse(response);
     } catch (e) {
       return _handleError(e);
